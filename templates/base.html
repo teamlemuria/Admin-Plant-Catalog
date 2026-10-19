@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Plant Index{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/>
+          <path d="M5 19c3-4 6-7 10-9"/>
+        </svg>
+      </span>
+      <span class="brand-text">Plant Index<small>Inventory editor</small></span>
+    </a>
+
+    <nav class="main-nav" aria-label="Main">
+      <a href="{{ url_for('index') }}" class="{{ 'active' if nav == 'inventory' }}">Inventory</a>
+      <a href="{{ url_for('add') }}" class="{{ 'active' if nav == 'add' }}">Add Plant</a>
+    </nav>
+
+    <span class="local-tag" title="This app runs only on this computer">Local &middot; plant-index.xlsx</span>
+  </div>
+</header>
+
+<main class="page">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="notice" role="status">
+        <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="8"/><path d="M6.5 10.5l2.5 2.5 4.5-5"/></svg>
+        {{ messages[0] }}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div>
+      <h3>About this tool</h3>
+      <p>Edits are written directly to <strong>plant-index.xlsx</strong> on this computer.<br>
+      No database or network connection is used.</p>
+    </div>
+    <div>
+      <h3>Before you edit</h3>
+      <p>Keep a backup copy of the workbook<br>before working with the real shared file.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

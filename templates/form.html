@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% set nav = "add" if mode == "Add" else "inventory" %}
+{% block title %}{{ mode }} Plant &mdash; Plant Index{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{{ url_for('index', q=return_q, page=return_page) }}">Inventory</a> &rsaquo;
+  {{ mode }} Plant{% if mode == "Edit" and row["COMMON NAME"] %} &rsaquo; {{ row["COMMON NAME"] }}{% endif %}
+</nav>
+
+<div class="page-head">
+  <div>
+    <h1>{{ mode }} Plant Entry</h1>
+    <p class="intro">
+      {% if mode == "Edit" %}Update the spreadsheet record using this form.
+      {% else %}Create a new plant record in the spreadsheet.{% endif %}
+    </p>
+  </div>
+</div>
+
+<form class="record-form" method="post">
+  <input type="hidden" name="_return_q" value="{{ return_q }}">
+  <input type="hidden" name="_return_page" value="{{ return_page }}">
+
+  {% for title, fields in sections %}
+  <section class="card form-card">
+    <h2>{{ title }}</h2>
+    <div class="form-grid">
+      {% for idx, h in fields %}
+        {% set value = row[h] %}
+        <div class="form-group {{ 'full-width' if h in wide }}">
+          <label for="field_{{ idx }}">{{ h }}</label>
+
+          {% if h == "STOCK NOTE" %}
+            <select id="field_{{ idx }}" name="field_{{ idx }}">
+              <option value=""></option>
+              {% for opt in stock_options %}
+                <option value="{{ opt }}" {{ 'selected' if value == opt }}>{{ opt }}</option>
+              {% endfor %}
+              {% if value and value not in stock_options %}
+                <option value="{{ value }}" selected>{{ value }}</option>
+              {% endif %}
+            </select>
+
+          {% elif h == "LAST CHECK" %}
+            <input type="date" id="field_{{ idx }}" name="field_{{ idx }}"
+                   value="{{ value.strftime('%Y-%m-%d') if value and value.strftime is defined else '' }}">
+
+          {% elif h == image_field %}
+            <input id="field_{{ idx }}" name="field_{{ idx }}" list="photo_files" autocomplete="off"
+                   placeholder="e.g. roses/knockout-red.jpg"
+                   value="{{ value if value is not none else '' }}" data-photo-input>
+            <datalist id="photo_files">
+              {% for f in photo_files %}<option value="{{ f }}">{% endfor %}
+            </datalist>
+            <p class="hint">Path of the picture <em>inside the photos folder</em>. Start typing to pick from files already there.</p>
+            <div class="photo-preview" data-photo-preview data-base="{{ url_for('photo', filename='') }}"
+                 data-placeholder="{{ url_for('static', filename='placeholder.svg') }}">
+              <img alt="Photo preview" hidden>
+              <span class="photo-preview-msg">No photo set</span>
+            </div>
+
+          {% elif h == "PRICE" %}
+            <div class="input-prefix"><span>$</span>
+              <input type="number" step="0.01" min="0" id="field_{{ idx }}" name="field_{{ idx }}"
+                     value="{{ value if value is not none else '' }}">
+            </div>
+
+          {% else %}
+            <input id="field_{{ idx }}" name="field_{{ idx }}"
+                   value="{{ value if value is not none else '' }}"
+                   {% if h in suggest %}list="list_{{ idx }}" autocomplete="off"{% endif %}>
+            {% if h in suggest %}
+              <datalist id="list_{{ idx }}">
+                {% for opt in suggest[h] %}<option value="{{ opt }}">{% endfor %}
+              </datalist>
+            {% endif %}
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  {% if not has_image_col %}
+  <section class="card form-card">
+    <h2>Photo</h2>
+    <p class="hint" style="margin:0 0 18px">
+      Photos are switched off because the workbook has no <strong>{{ image_field }}</strong> column.
+      Add a column headed <strong>{{ image_field }}</strong> to the first row of Sheet1
+      (close Excel, save, then reload this page) and a photo field will appear here.
+    </p>
+  </section>
+  {% endif %}
+
+  <div class="form-actions">
+    <button class="button primary" type="submit">Save {{ "Changes" if mode == "Edit" else "Plant Entry" }}</button>
+    <a class="button" href="{{ url_for('index', q=return_q, page=return_page) }}">Cancel</a>
+  </div>
+</form>
+
+{% if has_image_col %}
+<script>
+(function () {
+  var input = document.querySelector("[data-photo-input]");
+  var box = document.querySelector("[data-photo-preview]");
+  if (!input || !box) return;
+  var img = box.querySelector("img"), msg = box.querySelector(".photo-preview-msg");
+  function clean(v) { return v.trim().replace(/\\/g, "/").replace(/^(\.\/|\/)+/, "").replace(/^photos\//i, ""); }
+  function update() {
+    var v = clean(input.value);
+    if (!v) { img.hidden = true; msg.hidden = false; msg.textContent = "No photo set"; return; }
+    msg.hidden = false; msg.textContent = "Checking\u2026"; img.hidden = true;
+    img.onload = function () { img.hidden = false; msg.hidden = true; };
+    img.onerror = function () { img.hidden = true; msg.hidden = false; msg.textContent = "File not found in the photos folder"; };
+    img.src = box.dataset.base + v.split("/").map(encodeURIComponent).join("/");
+  }
+  input.addEventListener("input", update);
+  update();
+})();
+</script>
+{% endif %}
+{% endblock %}

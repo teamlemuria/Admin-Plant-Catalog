@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% set nav = "inventory" %}
+{% set common = info["COMMON NAME"]|nicecase %}
+{% block title %}{{ common }} &mdash; Plant Index{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="{{ url_for('index', q=back_q, page=back_page) }}">Inventory</a> &rsaquo; {{ common }}
+</nav>
+
+<article class="plant">
+
+  <section class="card plant-hero">
+    <figure class="plant-photo">
+      {% if photo_state == "ok" %}
+        <img src="{{ url_for('photo', filename=image_rel) }}" alt="{{ common }}"
+             onerror="this.onerror=null;this.src='{{ url_for('static', filename='placeholder.svg') }}'">
+      {% else %}
+        <img src="{{ url_for('static', filename='placeholder.svg') }}" alt="No photo available for {{ common }}">
+      {% endif %}
+      {% if show_staff and photo_state == "missing" %}
+        <figcaption class="photo-warn">Photo not found: <code>{{ image_rel }}</code></figcaption>
+      {% elif show_staff and photo_state == "none" %}
+        <figcaption class="photo-warn muted">
+          {% if has_image_col %}No photo set for this plant.{% else %}No IMAGE column in the workbook yet.{% endif %}
+        </figcaption>
+      {% endif %}
+    </figure>
+
+    <div class="plant-summary">
+      {% if info["LIST"] %}<p class="eyebrow">{{ info["LIST"]|nicecase }}</p>{% endif %}
+      <h1>{{ common }}</h1>
+      <p class="botanical-name">{{ info["BOTANICAL NAME"] }}</p>
+
+      <div class="tags">
+        {% if info["CN / DT"] %}<span class="tag leaf">{{ info["CN / DT"] }}</span>{% endif %}
+        {% if info["FOLIAGE TYPE"] %}<span class="tag">{{ info["FOLIAGE TYPE"] }}</span>{% endif %}
+        {% if info["EXPOSURE"] %}<span class="tag sun">{{ info["EXPOSURE"]|nicecase }}</span>{% endif %}
+      </div>
+
+      <dl class="facts">
+        {% if info["HxW"] %}<div><dt>Mature size (H &times; W)</dt><dd>{{ info["HxW"] }}</dd></div>{% endif %}
+        {% if info["EXPOSURE"] %}<div><dt>Sun exposure</dt><dd>{{ info["EXPOSURE"]|nicecase }}</dd></div>{% endif %}
+        {% if info["FOLIAGE TYPE"] %}<div><dt>Foliage</dt><dd>{{ info["FOLIAGE TYPE"] }}</dd></div>{% endif %}
+        {% if info["CN / DT"] %}<div><dt>Special traits</dt><dd>{{ info["CN / DT"] }}</dd></div>{% endif %}
+      </dl>
+    </div>
+  </section>
+
+  <section class="card sizes-card">
+    <h2>Available Sizes</h2>
+    <table class="sizes">
+      <thead>
+        <tr><th>Container</th><th class="num">Price</th><th>Availability</th>{% if show_staff %}<th class="action-col"><span class="sr-only">Edit</span></th>{% endif %}</tr>
+      </thead>
+      <tbody>
+        {% for r in sizes %}
+        <tr>
+          <td><strong>{{ r["SIZE"]|size_label if r["SIZE"] is not none else "&mdash;"|safe }}</strong></td>
+          <td class="num">{% if r["PRICE"] is not none %}{{ r["PRICE"]|money }}{% else %}&mdash;{% endif %}</td>
+          <td>{% if r["STOCK NOTE"] %}<span class="badge {{ r['STOCK NOTE']|stock_class }}">{{ r["STOCK NOTE"] }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+          {% if show_staff %}<td class="action-col"><a class="button small" href="{{ url_for('edit', excel_row=r['_row']) }}">Edit</a></td>{% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if show_staff and staff_fields %}
+  <section class="card staff-card">
+    <h2>Staff Details <span class="staff-tag">internal</span></h2>
+    <table class="sizes staff">
+      <thead>
+        <tr><th>Container</th>{% for f in staff_fields %}<th>{{ f }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for r in sizes %}
+        <tr>
+          <td>{{ r["SIZE"]|size_label if r["SIZE"] is not none else "" }}</td>
+          {% for f in staff_fields %}
+            {% set v = r[f] %}
+            <td>{% if v is not none %}{% if v.strftime is defined %}{{ v.strftime("%Y-%m-%d") }}{% else %}{{ v }}{% endif %}{% endif %}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+</article>
+{% endblock %}
