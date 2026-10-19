@@ -11,21 +11,25 @@
 <article class="plant">
 
   <section class="card plant-hero">
-    <figure class="plant-photo">
-      {% if photo_state == "ok" %}
-        <img src="{{ url_for('photo', filename=image_rel) }}" alt="{{ common }}"
-             onerror="this.onerror=null;this.src='{{ url_for('static', filename='placeholder.svg') }}'">
+    <div class="plant-photo-gallery">
+      {% if image_gallery %}
+        {% for photo_item in image_gallery %}
+          {% if photo_item.exists %}
+            <figure class="plant-photo">
+              <a href="{{ url_for('photo', filename=photo_item.path) }}" target="_blank" rel="noopener">
+                <img src="{{ url_for('photo', filename=photo_item.path) }}" alt="{{ common }} photo {{ loop.index }}" loading="lazy">
+              </a>
+              {% if show_staff %}<figcaption class="photo-caption">{{ photo_item.path }}</figcaption>{% endif %}
+            </figure>
+          {% elif show_staff %}
+            <p class="photo-warn">Photo not found: <code>{{ photo_item.path }}</code></p>
+          {% endif %}
+        {% endfor %}
       {% else %}
-        <img src="{{ url_for('static', filename='placeholder.svg') }}" alt="No photo available for {{ common }}">
+        <figure class="plant-photo"><img src="{{ url_for('static', filename='placeholder.svg') }}" alt="No photo available for {{ common }}"></figure>
+        {% if show_staff %}<p class="photo-warn muted">{% if has_image_col %}No photo set for this plant.{% else %}No IMAGE column in the workbook yet.{% endif %}</p>{% endif %}
       {% endif %}
-      {% if show_staff and photo_state == "missing" %}
-        <figcaption class="photo-warn">Photo not found: <code>{{ image_rel }}</code></figcaption>
-      {% elif show_staff and photo_state == "none" %}
-        <figcaption class="photo-warn muted">
-          {% if has_image_col %}No photo set for this plant.{% else %}No IMAGE column in the workbook yet.{% endif %}
-        </figcaption>
-      {% endif %}
-    </figure>
+    </div>
 
     <div class="plant-summary">
       {% if info["LIST"] %}<p class="eyebrow">{{ info["LIST"]|nicecase }}</p>{% endif %}

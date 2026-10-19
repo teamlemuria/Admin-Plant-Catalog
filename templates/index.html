@@ -56,7 +56,14 @@
           {% for h in headers %}
             {% set v = row[h] %}
             {% if h == "STOCK NOTE" %}
-              <td>{% if v %}<span class="badge {{ v|stock_class }}">{{ v }}</span>{% endif %}</td>
+              <td class="stock-cell">
+                <select class="stock-inline {{ v|stock_class }}" aria-label="Stock status for {{ row['COMMON NAME'] or 'this plant' }}" data-original="{{ v if v is not none else '' }}">
+                  <option value="" {{ 'selected' if not v }}>—</option>
+                  {% for opt in stock_options %}
+                    <option value="{{ opt }}" class="{{ opt|stock_class }}" {{ 'selected' if v == opt }}>{{ opt }}</option>
+                  {% endfor %}
+                </select>
+              </td>
             {% elif h == "PRICE" %}
               <td class="num">{% if v is not none %}{{ v|money }}{% endif %}</td>
             {% elif h == "BOTANICAL NAME" %}
@@ -150,4 +157,45 @@
 })();
 </script>
 {% endif %}
+<script>
+(function () {
+  var toast = document.getElementById("toast");
+  var timer;
+  function sayStock(msg, bad) {
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast";
+      toast.className = "toast";
+      toast.setAttribute("role", "status");
+      toast.setAttribute("aria-live", "polite");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.className = "toast show" + (bad ? " bad" : "");
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.className = "toast"; }, bad ? 5000 : 1800);
+  }
+  function applyClass(select, value) {
+    select.classList.remove("ok", "low", "check", "out", "none");
+    var v = (value || "").toLowerCase();
+    select.classList.add(v === "in stock" ? "ok" : v === "low stock" ? "low" : v === "check stock" ? "check" : v === "not available" ? "out" : "none");
+  }
+  document.querySelectorAll(".stock-inline").forEach(function (select) {
+    var row = select.closest("tr");
+    select.addEventListener("change", function () {
+      var previous = select.dataset.original || "";
+      var value = select.value;
+      select.disabled = true;
+      fetch("{{ url_for('update_stock_note', excel_row=0) }}".replace(/0$/, row.dataset.row), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: value })
+      }).then(function (r) { return r.json().then(function (data) { if (!r.ok || !data.ok) throw new Error(data.error || "Save failed"); return data; }); })
+        .then(function () { select.dataset.original = value; applyClass(select, value); sayStock("Stock status saved ✓"); })
+        .catch(function (err) { select.value = previous; applyClass(select, previous); sayStock(err.message || "Could not save stock status", true); })
+        .finally(function () { select.disabled = false; });
+    });
+    applyClass(select, select.value);
+  });
+})();
+</script>
 {% endblock %}

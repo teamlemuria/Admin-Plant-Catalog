@@ -47,17 +47,19 @@
                    value="{{ value.strftime('%Y-%m-%d') if value and value.strftime is defined else '' }}">
 
           {% elif h == image_field %}
-            <input id="field_{{ idx }}" name="field_{{ idx }}" list="photo_files" autocomplete="off"
-                   placeholder="e.g. roses/knockout-red.jpg"
-                   value="{{ value if value is not none else '' }}" data-photo-input>
-            <datalist id="photo_files">
-              {% for f in photo_files %}<option value="{{ f }}">{% endfor %}
-            </datalist>
-            <p class="hint">Path of the picture <em>inside the photos folder</em>. Start typing to pick from files already there.</p>
-            <div class="photo-preview" data-photo-preview data-base="{{ url_for('photo', filename='') }}"
+            <textarea id="field_{{ idx }}" name="field_{{ idx }}" rows="3"
+                      placeholder="e.g. roses/knockout-red.jpg; roses/knockout-flower.jpg"
+                      data-photo-input>{{ value if value is not none else '' }}</textarea>
+            <p class="hint">Enter one or more image paths from the <em>photos</em> folder, separated by semicolons. Example: <code>roses/knockout-red.jpg; roses/knockout-flower.jpg</code>. Existing single-photo records continue to work.</p>
+            {% if photo_files %}
+            <details class="photo-file-list"><summary>Show available photo filenames ({{ photo_files|length }})</summary>
+              <ul>{% for f in photo_files %}<li><code>{{ f }}</code></li>{% endfor %}</ul>
+            </details>
+            {% endif %}
+            <div class="photo-preview photo-gallery-preview" data-photo-preview data-base="{{ url_for('photo', filename='') }}"
                  data-placeholder="{{ url_for('static', filename='placeholder.svg') }}">
-              <img alt="Photo preview" hidden>
               <span class="photo-preview-msg">No photo set</span>
+              <div class="photo-preview-grid" data-photo-preview-grid></div>
             </div>
 
           {% elif h == "PRICE" %}
@@ -105,15 +107,30 @@
   var input = document.querySelector("[data-photo-input]");
   var box = document.querySelector("[data-photo-preview]");
   if (!input || !box) return;
-  var img = box.querySelector("img"), msg = box.querySelector(".photo-preview-msg");
-  function clean(v) { return v.trim().replace(/\\/g, "/").replace(/^(\.\/|\/)+/, "").replace(/^photos\//i, ""); }
+  var msg = box.querySelector(".photo-preview-msg");
+  var grid = box.querySelector("[data-photo-preview-grid]");
+  function paths() {
+    var seen = {};
+    return input.value.replace(/\r/g, "\n").split(/[;\n]+/).map(function (v) {
+      return v.trim().replace(/\\/g, "/").replace(/^(\.\/|\/)+/, "").replace(/^photos\//i, "");
+    }).filter(function (v) { if (!v || seen[v]) return false; seen[v] = true; return true; });
+  }
   function update() {
-    var v = clean(input.value);
-    if (!v) { img.hidden = true; msg.hidden = false; msg.textContent = "No photo set"; return; }
-    msg.hidden = false; msg.textContent = "Checking\u2026"; img.hidden = true;
-    img.onload = function () { img.hidden = false; msg.hidden = true; };
-    img.onerror = function () { img.hidden = true; msg.hidden = false; msg.textContent = "File not found in the photos folder"; };
-    img.src = box.dataset.base + v.split("/").map(encodeURIComponent).join("/");
+    grid.innerHTML = "";
+    var list = paths();
+    if (!list.length) { msg.hidden = false; msg.textContent = "No photo set"; return; }
+    msg.hidden = true;
+    list.forEach(function (path) {
+      var wrap = document.createElement("div");
+      wrap.className = "photo-preview-item";
+      var img = document.createElement("img");
+      img.alt = path;
+      img.loading = "lazy";
+      img.onerror = function () { wrap.classList.add("missing"); img.remove(); var note = document.createElement("span"); note.textContent = "File not found: " + path; wrap.appendChild(note); };
+      img.src = box.dataset.base + path.split("/").map(encodeURIComponent).join("/");
+      var caption = document.createElement("small"); caption.textContent = path;
+      wrap.appendChild(img); wrap.appendChild(caption); grid.appendChild(wrap);
+    });
   }
   input.addEventListener("input", update);
   update();

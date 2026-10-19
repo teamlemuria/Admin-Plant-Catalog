@@ -118,6 +118,17 @@ def stock_options():
     wb.close()
     return options
 
+def parse_image_paths(value):
+    """Read legacy single paths or semicolon/newline-separated image paths."""
+    raw = display_value(value).replace("\r", "\n")
+    parts = re.split(r"[;\n]+", raw)
+    paths = []
+    for part in parts:
+        rel = clean_image_path(part)
+        if rel and rel not in paths:
+            paths.append(rel)
+    return paths
+
 def form_sections(headers):
     """Group (column_number, header) pairs into form sections."""
     index = {h: i for i, h in enumerate(headers, 1)}
@@ -257,7 +268,7 @@ def index():
                            page=page, pages=pages, first=start + 1 if total else 0,
                            last=start + len(page_rows),
                            check_field=CHECK_FIELD, has_check=CHECK_FIELD in headers,
-                           today=date.today().strftime("%Y-%m-%d"))
+                           today=date.today().strftime("%Y-%m-%d"), stock_options=stock_options())
 
 def date_cell_format(ws, col):
     """Reuse the number format already used by dates in this column (e.g. m/d)."""
@@ -309,6 +320,31 @@ def check(excel_row):
                    date=display_value(new),
                    previous=display_value(old) if checked else "")
 
+@app.route("/stock-note/<int:excel_row>", methods=["POST"])
+def update_stock_note(excel_row):
+    """Save a stock status directly from the inventory table."""
+    data = request.get_json(silent=True) or {}
+    value = str(data.get("value") or "").strip()
+    allowed = stock_options()
+    if value and value not in allowed:
+        return jsonify(ok=False, error="Choose one of the available stock options."), 400
+    try:
+        with LOCK:
+            wb, ws = get_workbook()
+            headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+            if "STOCK NOTE" not in headers or not (2 <= excel_row <= ws.max_row):
+                wb.close()
+                return jsonify(ok=False, error="Record or column not found."), 404
+            ws.cell(excel_row, headers.index("STOCK NOTE") + 1).value = value or None
+            restore_stock_validation(ws, wb)
+            wb.save(XLSX)
+            wb.close()
+    except PermissionError:
+        return jsonify(ok=False, error="Could not save - close plant-index.xlsx in Excel and try again."), 500
+    except Exception as exc:
+        return jsonify(ok=False, error=f"Could not save: {exc}"), 500
+    return jsonify(ok=True, value=value)
+
 @app.route("/photos/<path:filename>")
 def photo(filename):
     # send_from_directory refuses paths that escape PHOTO_DIR.
@@ -333,16 +369,18 @@ def plant(slug):
         return None
 
     info = {h: first(h) for h in headers if h}
-    image_rel = clean_image_path(first(IMAGE_FIELD)) if IMAGE_FIELD in headers else ""
-    if not image_rel:
+    image_paths = parse_image_paths(first(IMAGE_FIELD)) if IMAGE_FIELD in headers else []
+    image_gallery = [{"path": rel, "exists": photo_exists(rel)} for rel in image_paths]
+    image_rel = image_paths[0] if image_paths else ""
+    if not image_paths:
         photo_state = "none"
     else:
-        photo_state = "ok" if photo_exists(image_rel) else "missing"
+        photo_state = "ok" if any(item["exists"] for item in image_gallery) else "missing"
 
     return render_template("plant.html", info=info, sizes=group, headers=headers,
                            staff_fields=[f for f in STAFF_FIELDS if f in headers],
                            show_staff=SHOW_STAFF_DETAILS,
-                           image_rel=image_rel, photo_state=photo_state,
+                           image_rel=image_rel, image_gallery=image_gallery, photo_state=photo_state,
                            has_image_col=IMAGE_FIELD in headers,
                            back_q=request.args.get("q", ""), back_page=request.args.get("page", 1))
 
