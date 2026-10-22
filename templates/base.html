@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Plant Index{% endblock %}</title>
+  <title>{% block title %}Lemuria Plant Index{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -17,7 +17,7 @@
           <path d="M5 19c3-4 6-7 10-9"/>
         </svg>
       </span>
-      <span class="brand-text">Plant Index<small>Inventory editor</small></span>
+      <span class="brand-text">Lemuria Nursery<small>Plant Inventory Editor</small></span>
     </a>
 
     <nav class="main-nav" aria-label="Main">
@@ -25,7 +25,7 @@
       <a href="{{ url_for('add') }}" class="{{ 'active' if nav == 'add' }}">Add Plant</a>
     </nav>
 
-    <span class="local-tag" title="This app runs only on this computer">Local &middot; plant-index.xlsx</span>
+    <span class="local-tag" title="This app runs only on this tablet">Local &middot; plant-index.xlsx</span>
   </div>
 </header>
 
@@ -46,12 +46,12 @@
   <div class="footer-content">
     <div>
       <h3>About this tool</h3>
-      <p>Edits are written directly to <strong>plant-index.xlsx</strong> on this computer.<br>
-      No database or network connection is used.</p>
+      <p>Edits are written directly to <strong>plant-index.xlsx</strong> on this tablet.<br>
+      No database or network connection is used for the admin tool.</p>
     </div>
     <div>
-      <h3>Before you edit</h3>
-      <p>Keep a backup copy of the workbook<br>before working with the real shared file.</p>
+      <h3>Team Lemuria</h3>
+      <p>teamlemuria7820@gmail.com<br>teamlemuria@outlook.com</p>
     </div>
   </div>
 </footer>
