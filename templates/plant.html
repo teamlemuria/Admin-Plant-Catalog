@@ -27,7 +27,6 @@
         {% endfor %}
       {% else %}
         <figure class="plant-photo"><img src="{{ url_for('static', filename='placeholder.svg') }}" alt="No photo available for {{ common }}"></figure>
-        {% if show_staff %}<p class="photo-warn muted">{% if has_image_col %}No photo set for this plant.{% else %}No IMAGE column in the workbook yet.{% endif %}</p>{% endif %}
       {% endif %}
     </div>
 
