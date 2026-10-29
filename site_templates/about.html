@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ site.about_title }} &mdash; {{ site.name }}{% endblock %}
+{% block content %}
+<div class="wrap section prose">
+  <h1>{{ site.about_title }}</h1>
+  {% for para in site.about %}<p>{{ para }}</p>{% endfor %}
+  <p><a class="button primary" href="plants.html">Browse our plants</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+<a class="card" href="{{ root }}plant/{{ p.slug }}.html">
+  <img src="{{ root }}{{ p.photos[0].thumb if p.photos else 'static/placeholder.svg' }}" alt="" loading="lazy">
+  <div class="card-body">
+    <h3>{{ p.common }}</h3>
+    <p class="botanical">{{ p.botanical_html }}</p>
+    <p class="card-meta">{% if p.from_price %}<span>From {{ p.from_price }}</span>{% endif %}<span class="badge {{ p.cls }}">{{ p.status }}</span></p>
+  </div>
+</a>

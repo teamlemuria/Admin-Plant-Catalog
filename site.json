@@ -1,0 +1,49 @@
+{
+  "name": "Lemuria Nursery",
+  "tagline": "Family-owned since 1939",
+  "intro": "Trees, shrubs, perennials, roses and edibles, grown and chosen for our local climate. Browse what we have in stock, then come see it in person.",
+  "about_title": "About Us",
+  "about": [
+    "Lemuria Nursery is the largest wholesale grower in Solano County, open to the public. At Lemuria, we grow hundreds of varieties of plants. Our list of plants is always evolving. Many cultivars are collected locally and propagated onsite. At our nursery, you will find a great selection of hard to find Fruit Trees, Shade Trees, Roses, Shrubs, Perennials and Ornamental Grasses. We also grow some UC Davis Arboretum selections, a good assortment of succulents and even a few aquatic plants.",
+    "Our plant sizes range from 1gallon to 24inch box, at a very reasonable price. Because of our connections in the industry, we can also special order plants for your particular needs. Our truck delivers Mondays, Wednesdays, and Fridays. Please contact us for more details."
+  ],
+  "address": [
+    "7820 Serpa Lane",
+    "Dixon, CA 95620"
+  ],
+  "phone": "(707) 678-4481",
+  "email": "lemuriamen@aol.com",
+  "hours": [
+    [
+      "Monday - Saturday",
+      "8:00 am - 4:00 pm"
+    ],
+    [
+      "Sunday",
+      "Closed"
+    ]
+  ],
+  "visit_notes": [
+    "Come check out our great selection in person! Visit us Monday thru Saturday, 8AM to 4PM. Open to the public.",
+    "Plant deliveries are scheduled Mondays, Wednesdays, and Fridays. All deliveries will occur between the hours of 9AM and 12PM on those days.",
+    "All forms of payment except American Express are accepted."
+  ],
+  "stock_disclaimer": "Availability changes daily. Please call to confirm before making a special trip.",
+  "source_xlsx": "plant-index.xlsx",
+  "photo_dir": "photos",
+  "output_dir": "public-site",
+  "featured_count": 8,
+  "status_labels": {
+    "In stock": "In stock",
+    "Low stock": "Low stock",
+    "Check stock": "Call to confirm"
+  },
+  "blank_status_label": null,
+  "category_labels": {
+    "FIELD": "Garden Plants",
+    "TREE": "Trees",
+    "ROSE": "Roses",
+    "EDIBLE": "Edibles"
+  },
+  "category_other": "Other"
+}

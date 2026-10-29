@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ p.common }} &mdash; {{ site.name }}{% endblock %}
+{% block description %}{{ p.common }} ({{ p.botanical }}) at {{ site.name }}{% endblock %}
+{% block content %}
+<div class="wrap section">
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ root }}plants.html">Plants</a> &rsaquo; {{ p.common }}</nav>
+
+  <article class="plant">
+    <div class="gallery">
+      {% for ph in p.photos %}
+        <a href="{{ root }}{{ ph.full }}"><img src="{{ root }}{{ ph.full }}" alt="{{ p.common }} photo {{ loop.index }}"{% if not loop.first %} loading="lazy"{% endif %}></a>
+      {% else %}
+        <img src="{{ root }}static/placeholder.svg" alt="No photo available yet">
+      {% endfor %}
+    </div>
+
+    <div class="summary">
+      <p class="eyebrow">{{ p.category }}</p>
+      <h1>{{ p.common }}</h1>
+      <p class="botanical big">{{ p.botanical_html }}</p>
+      <p class="tags">{% for t in p.traits %}<span class="tag">{{ t }}</span>{% endfor %}</p>
+      <dl class="facts">
+        {% if p.sun %}<div><dt>Sun</dt><dd>{{ p.sun }}</dd></div>{% endif %}
+        {% if p.hxw %}<div><dt>Mature size (H &times; W)</dt><dd>{{ p.hxw }}</dd></div>{% endif %}
+      </dl>
+    </div>
+  </article>
+
+  <section class="sizes">
+    <h2>Available sizes</h2>
+    <table>
+      <thead><tr><th>Container</th><th class="num">Price</th><th>Availability</th></tr></thead>
+      <tbody>
+      {% for s in p.sizes %}
+        <tr><td><strong>{{ s.size }}</strong></td><td class="num">{{ s.price or "&mdash;"|safe }}</td><td><span class="badge {{ s.cls }}">{{ s.status }}</span></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted">{{ site.stock_disclaimer }}{% if site.phone %} Call us at {{ site.phone }}.{% endif %}</p>
+  </section>
+</div>
+{% endblock %}

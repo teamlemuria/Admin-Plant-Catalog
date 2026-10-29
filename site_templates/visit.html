@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Visit &mdash; {{ site.name }}{% endblock %}
+{% block content %}
+<div class="wrap section prose">
+  <h1>Visit Us</h1>
+  <div class="two-col">
+    <div>
+      <h2>Address</h2>
+      <p>{% for line in site.address %}{{ line }}<br>{% endfor %}</p>
+      <p><a href="{{ site.maps_url }}">Get directions</a></p>
+      {% if site.phone or site.email %}
+      <h2>Contact</h2>
+      <p>{% if site.phone %}{{ site.phone }}<br>{% endif %}{% if site.email %}<a href="mailto:{{ site.email }}">{{ site.email }}</a>{% endif %}</p>
+      {% endif %}
+    </div>
+    <div>
+      <h2>Hours</h2>
+      <table class="hours">{% for day, time in site.hours %}<tr><td>{{ day }}</td><td>{{ time }}</td></tr>{% endfor %}</table>
+    </div>
+  </div>
+  {% for note in site.visit_notes %}<p>{{ note }}</p>{% endfor %}
+</div>
+{% endblock %}

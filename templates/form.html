@@ -48,9 +48,17 @@
 
           {% elif h == image_field %}
             <textarea id="field_{{ idx }}" name="field_{{ idx }}" rows="3"
-                      placeholder="e.g. roses/knockout-red.jpg; roses/knockout-flower.jpg"
+                      placeholder="Photos you add will appear here automatically"
                       data-photo-input>{{ value if value is not none else '' }}</textarea>
-            <p class="hint">Enter one or more image paths from the <em>photos</em> folder, separated by semicolons. Example: <code>roses/knockout-red.jpg; roses/knockout-flower.jpg</code>. Existing single-photo records continue to work.</p>
+            <div class="photo-dropzone" data-photo-dropzone tabindex="0" role="button" aria-label="Add plant photos by dragging files here or browsing">
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple data-photo-picker hidden>
+              <span class="photo-drop-icon" aria-hidden="true">＋</span>
+              <strong>Drag and drop photos here</strong>
+              <span>or <button class="photo-browse-button" type="button" data-photo-browse>browse to select files</button></span>
+              <small>Photos are saved to this application's photos folder. Multiple photos are supported.</small>
+              <p class="photo-upload-status" data-photo-status aria-live="polite"></p>
+            </div>
+            <p class="hint">You can also enter existing photo paths manually. Photos added here are saved locally and their filenames are added to this field automatically.</p>
             {% if photo_files %}
             <details class="photo-file-list"><summary>Show available photo filenames ({{ photo_files|length }})</summary>
               <ul>{% for f in photo_files %}<li><code>{{ f }}</code></li>{% endfor %}</ul>
@@ -107,6 +115,10 @@
   var input = document.querySelector("[data-photo-input]");
   var box = document.querySelector("[data-photo-preview]");
   if (!input || !box) return;
+  var dropzone = document.querySelector("[data-photo-dropzone]");
+  var picker = document.querySelector("[data-photo-picker]");
+  var browse = document.querySelector("[data-photo-browse]");
+  var status = document.querySelector("[data-photo-status]");
   var msg = box.querySelector(".photo-preview-msg");
   var grid = box.querySelector("[data-photo-preview-grid]");
   function paths() {
@@ -133,6 +145,64 @@
     });
   }
   input.addEventListener("input", update);
+
+  function addPaths(files) {
+    var existing = paths();
+    files.forEach(function (path) { if (existing.indexOf(path) === -1) existing.push(path); });
+    input.value = existing.join("; ");
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function upload(files) {
+    var chosen = Array.prototype.slice.call(files || []);
+    if (!chosen.length) return;
+    var formData = new FormData();
+    chosen.forEach(function (file) { formData.append("photos", file, file.name); });
+    if (status) status.textContent = "Saving " + chosen.length + " photo" + (chosen.length === 1 ? "" : "s") + "…";
+    if (dropzone) dropzone.classList.add("uploading");
+    fetch("{{ url_for('upload_photos') }}", { method: "POST", body: formData })
+      .then(function (response) {
+        return response.json().then(function (data) {
+          if (!response.ok || !data.ok) throw new Error(data.error || "Photo upload failed.");
+          return data;
+        });
+      })
+      .then(function (data) {
+        addPaths(data.files || []);
+        var message = "Added: " + (data.files || []).join(", ");
+        if (data.warnings && data.warnings.length) message += " — " + data.warnings.join(" ");
+        if (status) status.textContent = message;
+      })
+      .catch(function (error) { if (status) status.textContent = error.message || "Photo upload failed. Please try again."; })
+      .finally(function () { if (dropzone) dropzone.classList.remove("uploading"); if (picker) picker.value = ""; });
+  }
+  if (browse && picker) browse.addEventListener("click", function () { picker.click(); });
+  if (picker) picker.addEventListener("change", function () { upload(picker.files); });
+  if (dropzone) {
+    dropzone.addEventListener("click", function (event) {
+      if (event.target === dropzone || event.target.classList.contains("photo-drop-icon") || event.target.tagName === "STRONG" || event.target.tagName === "SMALL" || (event.target.tagName === "SPAN" && !event.target.closest("button"))) {
+        if (picker) picker.click();
+      }
+    });
+    ["dragenter", "dragover"].forEach(function (name) {
+      dropzone.addEventListener(name, function (event) {
+        event.preventDefault(); event.stopPropagation(); dropzone.classList.add("drag-over");
+      });
+    });
+    ["dragleave", "dragend"].forEach(function (name) {
+      dropzone.addEventListener(name, function (event) {
+        event.preventDefault(); dropzone.classList.remove("drag-over");
+      });
+    });
+    dropzone.addEventListener("drop", function (event) {
+      event.preventDefault(); event.stopPropagation(); dropzone.classList.remove("drag-over");
+      upload(event.dataTransfer && event.dataTransfer.files);
+    });
+    dropzone.addEventListener("keydown", function (event) {
+      if ((event.key === "Enter" || event.key === " ") && event.target === dropzone) {
+        event.preventDefault(); if (picker) picker.click();
+      }
+    });
+  }
   update();
 })();
 </script>

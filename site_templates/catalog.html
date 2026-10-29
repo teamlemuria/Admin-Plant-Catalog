@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Plants &mdash; {{ site.name }}{% endblock %}
+{% block content %}
+<div class="wrap section">
+  <h1>Our Plants</h1>
+  <p class="muted">{{ site.stock_disclaimer }} Last updated {{ site.updated }}.</p>
+
+  <form class="filters" id="filters" onsubmit="return false">
+    <input type="search" id="q" placeholder="Search by name, e.g. salvia, maple, drought tolerant..." aria-label="Search plants" autocomplete="off">
+    <select id="category" aria-label="Type">
+      <option value="">All types</option>
+      {% for name, count in categories %}<option>{{ name }}</option>{% endfor %}
+    </select>
+    <select id="sun" aria-label="Sun exposure">
+      <option value="">Any light</option>
+      <option value="F">Full sun</option>
+      <option value="P">Part sun / part shade</option>
+      <option value="S">Shade</option>
+    </select>
+    <select id="trait" aria-label="Special traits">
+      <option value="">Any traits</option>
+      <option>CA Native</option>
+      <option>Drought Tolerant</option>
+    </select>
+    <label class="check"><input type="checkbox" id="instock"> In stock only</label>
+  </form>
+
+  <p id="count" class="muted" aria-live="polite"></p>
+  <div class="grid" id="results"></div>
+  <p class="more"><button class="button" id="more" hidden>Show more</button></p>
+  <noscript><p>Please turn on JavaScript to search the plant list.</p></noscript>
+</div>
+<script src="static/plants-data.js"></script>
+<script src="static/catalog.js"></script>
+{% endblock %}

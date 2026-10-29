@@ -8,7 +8,12 @@
     <h1>Plant Inventory</h1>
     <p class="intro">Search, view, and edit the plant inventory.</p>
   </div>
-  <a class="button primary" href="{{ url_for('add') }}">+ Add New Plant</a>
+  <div class="page-actions">
+    <form method="post" action="{{ url_for('update_site') }}" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Updating site…';">
+      <button class="button" type="submit">Update site</button>
+    </form>
+    <a class="button primary" href="{{ url_for('add') }}">+ Add New Plant</a>
+  </div>
 </div>
 
 <section class="card search-area">

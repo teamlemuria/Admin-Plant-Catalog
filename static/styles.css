@@ -122,6 +122,10 @@ a { color: var(--green-700); }
   margin-bottom: 22px;
 }
 .page-head h1 { font-size: 32px; color: var(--green-900); }
+.page-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.page-actions form { margin: 0; }
+.page-actions button:disabled { opacity: .65; cursor: wait; }
+
 .intro { margin: 6px 0 0; color: var(--muted); }
 
 .breadcrumb { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
@@ -424,6 +428,20 @@ table.staff { font-size: 13px; }
 }
 .photo-preview img { display: block; width: 100%; height: auto; }
 .photo-preview-msg { color: var(--muted); font-size: 13px; padding: 10px; text-align: center; }
+.photo-dropzone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+  min-height: 150px; margin-top: 12px; padding: 20px; text-align: center;
+  border: 2px dashed #9ab4a2; border-radius: 12px; background: #f7faf7; color: var(--ink);
+  cursor: pointer; transition: background .15s ease, border-color .15s ease;
+}
+.photo-dropzone.drag-over, .photo-dropzone:focus-visible { background: #e8f3eb; border-color: var(--green-700); outline: 3px solid rgba(58, 115, 88, .2); }
+.photo-dropzone.uploading { opacity: .7; pointer-events: none; }
+.photo-drop-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #e2eee5; color: var(--green-700); font-size: 26px; line-height: 1; }
+.photo-dropzone strong { font-size: 15px; }
+.photo-dropzone span { font-size: 14px; }
+.photo-dropzone small { color: var(--muted); font-size: 12px; }
+.photo-browse-button { border: 0; padding: 0; background: transparent; color: var(--green-700); text-decoration: underline; font: inherit; cursor: pointer; }
+.photo-upload-status { margin: 0; max-width: 100%; overflow-wrap: anywhere; font-size: 12px; color: var(--green-700); }
 
 @media (max-width: 760px) {
   .plant-hero { grid-template-columns: 1fr; }

@@ -3,10 +3,13 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.datavalidation import DataValidation
 from datetime import datetime, date
 from pathlib import Path
+from werkzeug.utils import secure_filename
 import threading
 import math
 import re
 import unicodedata
+import subprocess
+import sys
 
 BASE = Path(__file__).resolve().parent
 XLSX = BASE / "plant-index.xlsx"
@@ -345,6 +348,52 @@ def update_stock_note(excel_row):
         return jsonify(ok=False, error=f"Could not save: {exc}"), 500
     return jsonify(ok=True, value=value)
 
+@app.route("/upload-photos", methods=["POST"])
+def upload_photos():
+    """Save image files dropped/browsed into the form to the local photos folder."""
+    uploads = request.files.getlist("photos")
+    if not uploads or all(not item.filename for item in uploads):
+        return jsonify(ok=False, error="Choose or drop at least one image file."), 400
+
+    PHOTO_DIR.mkdir(parents=True, exist_ok=True)
+    saved = []
+    errors = []
+    for item in uploads:
+        if not item or not item.filename:
+            continue
+        original = Path(item.filename.replace("\\", "/")).name
+        safe_name = secure_filename(original)
+        suffix = Path(safe_name).suffix.lower()
+        if not safe_name or suffix not in IMAGE_EXTS:
+            errors.append(f"Skipped {original or 'unnamed file'}: unsupported image type.")
+            continue
+
+        # Dropping a file already in the photos folder is common. If the existing
+        # file is byte-for-byte identical, reuse it rather than making a duplicate.
+        target = PHOTO_DIR / safe_name
+        try:
+            content = item.read()
+            if target.exists() and target.read_bytes() == content:
+                saved.append(target.relative_to(PHOTO_DIR).as_posix())
+                continue
+            # Never silently overwrite a different photo with the same name.
+            if target.exists():
+                stem = target.stem
+                ext = target.suffix
+                counter = 2
+                while target.exists():
+                    target = PHOTO_DIR / f"{stem}-{counter}{ext}"
+                    counter += 1
+            target.write_bytes(content)
+            saved.append(target.relative_to(PHOTO_DIR).as_posix())
+        except Exception as exc:
+            errors.append(f"Could not save {original}: {exc}")
+
+    if not saved:
+        return jsonify(ok=False, error=" ".join(errors) or "No image files were saved."), 400
+    return jsonify(ok=True, files=saved, warnings=errors)
+
+
 @app.route("/photos/<path:filename>")
 def photo(filename):
     # send_from_directory refuses paths that escape PHOTO_DIR.
@@ -420,6 +469,33 @@ def add():
     for h in headers:
         row[h] = None
     return render_template("form.html", **form_context(headers, rows, row, "Add", "", 1))
+
+
+@app.route("/update-site", methods=["POST"])
+def update_site():
+    """Build the public, static website from the current admin workbook and photos."""
+    builder = BASE / "build_site.py"
+    try:
+        result = subprocess.run(
+            [sys.executable, str(builder)],
+            cwd=str(BASE), capture_output=True, text=True, timeout=900
+        )
+    except subprocess.TimeoutExpired:
+        flash("Site update took longer than 15 minutes and was stopped. Check the photos and try again.")
+        return redirect(url_for("index"))
+    except Exception as exc:
+        flash(f"Could not start site update: {exc}")
+        return redirect(url_for("index"))
+
+    if result.returncode == 0:
+        flash("Website updated successfully. Preview it by opening public-site/index.html in this application folder.")
+    else:
+        details = (result.stderr or result.stdout or "No error details were returned.").strip().splitlines()
+        summary = "\n".join(details[-4:])
+        log_path = BASE / "site-build-error.log"
+        log_path.write_text((result.stdout or "") + "\n--- STDERR ---\n" + (result.stderr or ""), encoding="utf-8")
+        flash(f"Site update failed. Details were saved to site-build-error.log. {summary[-500:]}")
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     import webbrowser
