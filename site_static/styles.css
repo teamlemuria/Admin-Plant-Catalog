@@ -41,7 +41,7 @@ img { max-width:100%; display:block; }
 .button:hover { filter:brightness(.95); }
 
 /* home */
-.hero { background:linear-gradient(135deg,var(--green-900),var(--green-600)); color:#fff; padding:64px 0; }
+.hero { background: url('photos/nursery-landing.jpg'); background-size: cover; color:#fff; padding:64px 0; }
 .hero h1 { font-size:2.8rem; }
 .hero .lead { font-size:1.3rem; margin:0 0 12px; opacity:.95; }
 .hero p { max-width:620px; }
