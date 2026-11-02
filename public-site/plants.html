@@ -26,14 +26,15 @@
 <main>
 <div class="wrap section">
   <h1>Our Plants</h1>
-  <p class="muted">Availability changes daily. Please call to confirm before making a special trip. Last updated October 31, 2026.</p>
+  <p class="muted">Availability changes daily. Please call to confirm before making a special trip. Last updated November 2, 2026.</p>
 
   <form class="filters" id="filters" onsubmit="return false">
-    <input type="search" id="q" placeholder="Search by name, e.g. salvia, maple, drought tolerant..." aria-label="Search plants" autocomplete="off">
+    <input type="search" id="q" class="catalog-search" placeholder="Search by name, e.g. salvia, maple, drought tolerant..." aria-label="Search plants" autocomplete="off">
     <select id="category" aria-label="Type">
       <option value="">All types</option>
-      <option>Garden Plants</option><option>Trees</option><option>Roses</option><option>Edibles</option><option>Other</option>
+      
     </select>
+    <select id="subtype" aria-label="Subtype"><option value="">All subtypes</option></select>
     <select id="sun" aria-label="Sun exposure">
       <option value="">Any light</option>
       <option value="F">Full sun</option>

@@ -20,7 +20,7 @@ import shutil
 import stat
 import time
 import unicodedata
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -203,6 +203,12 @@ def load_rows(xlsx):
     return rows
 
 
+def date_value(v):
+    if isinstance(v, (datetime, date)):
+        return v.strftime("%Y-%m-%d")
+    return text(v)
+
+
 def build_plants(rows, cfg, photo_dir, out_dir, force):
     labels = dict(cfg["status_labels"])
     if cfg.get("blank_status_label"):          # optional: list plants whose STOCK NOTE is blank
@@ -230,14 +236,16 @@ def build_plants(rows, cfg, photo_dir, out_dir, force):
                   "cls": STATUS_CLASS.get(text(r.get("STOCK NOTE")), "check")} for r in grp]
         prices = [float(r["PRICE"]) for r in grp if isinstance(r.get("PRICE"), (int, float))]
         best = min((text(r.get("STOCK NOTE")) for r in grp), key=status_order.index)
-        category = cfg["category_labels"].get(text(first("LIST")).upper(), cfg["category_other"])
+        category = text(first("TYPE")) or cfg["category_other"]
+        subtype = text(first("SUBTYPE"))
 
         plants.append({
             "slug": slug,
             "common": nicecase(first("COMMON NAME")) or text(first("BOTANICAL NAME")),
             "botanical": text(first("BOTANICAL NAME")),
             "botanical_html": botanical_html(first("BOTANICAL NAME")),
-            "category": category, "type": text(first("TYPE")),
+            "category": category, "type": text(first("TYPE")), "subtype": subtype,
+            "last_updated": date_value(first("LAST CHECK")),
             "sun": nicecase(first("EXPOSURE")), "sun_flags": sun_flags(first("EXPOSURE")),
             "hxw": text(first("HxW")),
             "traits": [t for t in (text(first("CN / DT")), text(first("FOLIAGE TYPE"))) if t],
@@ -245,7 +253,7 @@ def build_plants(rows, cfg, photo_dir, out_dir, force):
             "from_price": money(min(prices)) if prices else "",
             "status": labels[best], "cls": STATUS_CLASS.get(best, "check"),
         })
-    plants.sort(key=lambda p: p["common"].lower())
+    plants.sort(key=lambda p: (p["botanical"].casefold(), p["common"].casefold()))
     return plants
 
 
@@ -306,10 +314,10 @@ def main():
         render("plant.html", f"plant/{p['slug']}.html", "../", nav="plants", p=p)
 
     # Compact search data, loaded by plants.html as a plain script (works from file:// too).
-    data = [{"s": p["slug"], "n": p["common"], "b": p["botanical"], "c": p["category"],
+    data = [{"s": p["slug"], "n": p["common"], "b": p["botanical"], "c": p["category"], "sub": p["subtype"], "d": p["last_updated"],
              "u": p["sun_flags"], "t": p["traits"], "p": p["from_price"], "st": p["status"],
              "k": p["cls"], "i": p["photos"][0]["thumb"] if p["photos"] else "",
-             "h": " ".join([p["common"], p["botanical"], p["category"], p["type"], p["sun"],
+             "h": " ".join([p["common"], p["botanical"], p["category"], p["subtype"], p["type"], p["sun"],
                             *p["traits"]]).lower()} for p in plants]
     out("static/plants-data.js",
         "window.PLANTS=" + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + ";")

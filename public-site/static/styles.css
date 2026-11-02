@@ -41,7 +41,9 @@ img { max-width:100%; display:block; }
 .button:hover { filter:brightness(.95); }
 
 /* home */
-.hero { background: url('photos/nursery-landing.jpg'); background-size: cover; color:#fff; padding:64px 0; }
+.hero { position:relative; isolation:isolate; background: url('photos/nursery-landing.jpg') center/cover no-repeat; color:#fff; padding:64px 0; }
+.hero::before { content:""; position:absolute; inset:0; z-index:-1; background:rgba(50,75,57,.72); }
+.hero .wrap { position:relative; }
 .hero h1 { font-size:2.8rem; }
 .hero .lead { font-size:1.3rem; margin:0 0 12px; opacity:.95; }
 .hero p { max-width:620px; }
@@ -70,7 +72,10 @@ img { max-width:100%; display:block; }
 .card-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:auto 0 0; padding-top:10px; font-size:.9rem; }
 .filters { display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 8px; padding:14px; background:var(--white);
   border:1px solid var(--line); border-radius:var(--radius); align-items:center; }
-.filters input[type=search] { flex:1 1 280px; }
+.filters input[type=search] { flex:1 1 100%; min-height:52px; font-size:1.1rem; border:2px solid var(--green-600); box-shadow:0 0 0 3px rgba(58,115,88,.10); }
+.updated { display:block; color:var(--muted); font-size:.75rem; padding-top:3px; }
+.plant-updated { margin:8px 0; font-size:.9rem; }
+.inline-field { width:90px; min-width:60px; padding:5px; border:1px solid var(--line); border-radius:5px; font:inherit; }
 .filters input[type=search], .filters select { padding:10px 12px; border:1px solid var(--line); border-radius:8px; font:inherit; background:#fff; }
 .check { display:flex; align-items:center; gap:6px; }
 

@@ -24,7 +24,7 @@ PHOTO_DIR = BASE / "photos"
 IMAGE_FIELD = "IMAGE"            # column heading in the workbook
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 # Internal columns shown only in the "Staff details" panel of a landing page.
-STAFF_FIELDS = ["ROW", "#", "LAST CHECK", "TYPE", "LIST"]
+STAFF_FIELDS = ["ROW", "#", "LAST CHECK", "TYPE", "SUBTYPE"]
 # Set to False before sharing landing pages with customers: hides the staff panel,
 # the Edit buttons, and photo-path warnings.
 SHOW_STAFF_DETAILS = True
@@ -283,7 +283,7 @@ def date_cell_format(ws, col):
 
 @app.route("/check/<int:excel_row>", methods=["POST"])
 def check(excel_row):
-    """Tick/untick the 'have it' checkbox. Ticked -> LAST CHECK = today.
+    """Tick/untick the 'Confirm' checkbox. Ticked -> LAST CHECK = today.
     Unticked -> LAST CHECK goes back to what it was before (sent by the page)."""
     data = request.get_json(silent=True) or {}
     checked = bool(data.get("checked"))
@@ -344,6 +344,31 @@ def update_stock_note(excel_row):
             wb.close()
     except PermissionError:
         return jsonify(ok=False, error="Could not save - close plant-index.xlsx in Excel and try again."), 500
+    except Exception as exc:
+        return jsonify(ok=False, error=f"Could not save: {exc}"), 500
+    return jsonify(ok=True, value=value)
+
+
+@app.route("/inline-field/<int:excel_row>", methods=["POST"])
+def update_inline_field(excel_row):
+    data = request.get_json(silent=True) or {}
+    field = str(data.get("field") or "")
+    value = str(data.get("value") or "").strip()
+    if field not in {"#", "ROW"}:
+        return jsonify(ok=False, error="Field is not editable here."), 400
+    try:
+        with LOCK:
+            wb, ws = get_workbook()
+            headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+            if field not in headers or not (2 <= excel_row <= ws.max_row):
+                wb.close()
+                return jsonify(ok=False, error="Record or column not found."), 404
+            cell = ws.cell(excel_row, headers.index(field) + 1)
+            cell.value = value or None
+            wb.save(XLSX)
+            wb.close()
+    except PermissionError:
+        return jsonify(ok=False, error="Close plant-index.xlsx in Excel and try again."), 500
     except Exception as exc:
         return jsonify(ok=False, error=f"Could not save: {exc}"), 500
     return jsonify(ok=True, value=value)
@@ -488,7 +513,17 @@ def update_site():
         return redirect(url_for("index"))
 
     if result.returncode == 0:
-        flash("Website updated successfully. Preview it by opening public-site/index.html in this application folder.")
+        try:
+            import shutil
+            generated = BASE / "public-site"
+            destination = BASE.parent / "teamlemuria.github.io"
+            if destination.exists():
+                shutil.copytree(generated, destination, dirs_exist_ok=True)
+            else:
+                shutil.copytree(generated, destination)
+            flash("Website updated. Generated files were saved to public-site and copied to the sibling teamlemuria.github.io folder.")
+        except Exception as exc:
+            flash(f"Site builder completed, but copying to teamlemuria.github.io failed: {exc}")
     else:
         details = (result.stderr or result.stdout or "No error details were returned.").strip().splitlines()
         summary = "\n".join(details[-4:])

@@ -18,6 +18,7 @@
       <p class="eyebrow">{{ p.category }}</p>
       <h1>{{ p.common }}</h1>
       <p class="botanical big">{{ p.botanical_html }}</p>
+      {% if p.last_updated %}<p class="muted plant-updated">Catalog record updated: {{ p.last_updated }}</p>{% endif %}
       <p class="tags">{% for t in p.traits %}<span class="tag">{{ t }}</span>{% endfor %}</p>
       <dl class="facts">
         {% if p.sun %}<div><dt>Sun</dt><dd>{{ p.sun }}</dd></div>{% endif %}

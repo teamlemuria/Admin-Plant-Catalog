@@ -40,7 +40,7 @@ It is a lightweight local application for editing and searching the supplied `pl
 - Keeps the workbook's STOCK NOTE dropdown intact when saving.
 - Click any common name to open that plant's landing page: photo, growing facts, and a table of available sizes.
 - Photos come from the `photos` folder; the IMAGE column holds one or more paths inside it (e.g. `roses/knockout-red.jpg; roses/knockout-flower.jpg`).
-- "Have it" checkbox on every search-result row: tick it and today's date is saved to LAST CHECK right away (no need to open the record). Untick to undo. Ticked rows turn light green.
+- "Confirm" checkbox on every search-result row: tick it and today's date is saved to LAST CHECK right away (no need to open the record). Untick to undo. Ticked rows turn light green.
 
 ## Maintain the catalog
 
@@ -74,3 +74,36 @@ Edit `site.json` in a text editor to change the public site's name, introduction
 ## Backup
 
 Back up `plant-index.xlsx` and the `photos/` folder regularly. Keep a backup copy of `plant-index.xlsx` before using the application with the real shared workbook. The generated `public-site/` folder can be rebuilt from those source files and `site.json`.
+
+## Vocabularies in Use
+
+Here is a list of all the plant types used and their subtypes. This taxonomy is meant to be descriptive, not rigid.
+
+Edible Fruit/Nut	
+   Berry
+   Fruit Tree
+   Nut Tree
+Perennial	
+   Flowering Perennial
+   Vine
+   Grass
+   Groundcover
+   Shrub
+   Succulent
+   Shrub
+Rose	
+   Climber Rose
+   Floribunda Rose
+   Grandiflora Rose
+   Hybrid Tea Rose
+   Shrub Rose
+   Tree Rose
+Tree	
+   Crape Myrtle
+   Japanese Maple
+
+Here is a list of statuses. These are meant to be enforced rigidly:
+-In stock
+-Low stock
+-Check stock
+-Not available

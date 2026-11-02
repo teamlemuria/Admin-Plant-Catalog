@@ -41,7 +41,7 @@
     <table>
       <thead>
         <tr>
-          {% if has_check %}<th class="check-col" title="Tick when you've seen this plant today">Have it</th>{% endif %}
+          {% if has_check %}<th class="check-col" title="Tick when you've seen this plant today">Confirm</th>{% endif %}
           {% for h in headers %}<th>{{ h }}</th>{% endfor %}
           <th class="action-col"><span class="sr-only">Actions</span></th>
         </tr>
@@ -52,7 +52,7 @@
         <tr class="{{ 'seen-today' if seen_today }}" data-row="{{ row['_row'] }}">
           {% if has_check %}
           <td class="check-col">
-            <label class="check-box" aria-label="We have {{ row['COMMON NAME'] or 'this plant' }} - record today's date">
+            <label class="check-box" aria-label="Confirm {{ row['COMMON NAME'] or 'this plant' }} and record today's date">
               <input type="checkbox" class="seen-toggle" {{ 'checked' if seen_today }}>
               <span class="check-mark"></span>
             </label>
@@ -69,6 +69,8 @@
                   {% endfor %}
                 </select>
               </td>
+            {% elif h in ["#", "ROW"] %}
+              <td><input class="inline-field" data-field="{{ h }}" value="{{ v if v is not none else '' }}" aria-label="Edit {{ h }}" /></td>
             {% elif h == "PRICE" %}
               <td class="num">{% if v is not none %}{{ v|money }}{% endif %}</td>
             {% elif h == "BOTANICAL NAME" %}
@@ -185,6 +187,22 @@
     var v = (value || "").toLowerCase();
     select.classList.add(v === "in stock" ? "ok" : v === "low stock" ? "low" : v === "check stock" ? "check" : v === "not available" ? "out" : "none");
   }
+  document.querySelectorAll(".inline-field").forEach(function (input) {
+    var row = input.closest("tr"), original = input.value;
+    function saveField() {
+      if (input.value === original) return;
+      input.disabled = true;
+      fetch("{{ url_for('update_inline_field', excel_row=0) }}".replace(/0$/, row.dataset.row), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ field: input.dataset.field, value: input.value })
+      }).then(function (r) { return r.json().then(function (data) { if (!r.ok || !data.ok) throw new Error(data.error || "Save failed"); return data; }); })
+        .then(function () { original = input.value; sayStock(input.dataset.field + " saved ✓"); })
+        .catch(function (err) { input.value = original; sayStock(err.message || "Could not save", true); })
+        .finally(function () { input.disabled = false; });
+    }
+    input.addEventListener("change", saveField);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); input.blur(); } });
+  });
   document.querySelectorAll(".stock-inline").forEach(function (select) {
     var row = select.closest("tr");
     select.addEventListener("change", function () {
