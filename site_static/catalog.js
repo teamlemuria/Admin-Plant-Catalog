@@ -7,6 +7,17 @@
   var results = $("results"), count = $("count"), more = $("more");
   var matches = [], shown = 0;
 
+  // Default order: alphabetical by botanical name (case, quote marks and extra spaces ignored).
+  function sortKey(p) {
+    return String(p.b || "").replace(/[\u2018\u2019\u201c\u201d'\"]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+  all = all.slice().sort(function (a, b) {
+    var x = sortKey(a), y = sortKey(b);
+    if (x !== y) return x < y ? -1 : 1;
+    x = String(a.n || "").toLowerCase(); y = String(b.n || "").toLowerCase();
+    return x < y ? -1 : x > y ? 1 : 0;
+  });
+
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];

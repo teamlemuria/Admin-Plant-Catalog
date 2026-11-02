@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero{{ ' has-image' if hero_url }}"{% if hero_url %} style="background-image:url('{{ hero_url }}')"{% endif %}>
+  <div class="hero-overlay">
+    <div class="wrap">
+      <h1>{{ site.name }}</h1>
+      <p class="lead">{{ site.tagline }}</p>
+      <p class="hero-intro">{{ site.intro }}</p>
+      <form class="hero-search" action="plants.html" method="get" role="search">
+        <input type="search" name="q" placeholder="Search {{ '{:,}'.format(plant_count) }} plants, e.g. salvia, maple, drought tolerant..." aria-label="Search plants" autocomplete="off">
+        <button type="submit" class="button primary">Search</button>
+      </form>
+      <p class="hero-actions">
+        <a class="button" href="plants.html">Browse all plants</a>
+        <a class="button" href="visit.html">Hours &amp; directions</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap section">
+  <h2>Shop by type</h2>
+  <div class="tiles">
+    {% for name, count in categories %}
+    <a class="tile" href="plants.html?category={{ name|urlencode }}"><strong>{{ name }}</strong><span>{{ count }} plants</span></a>
+    {% endfor %}
+  </div>
+</section>
+
+{% if featured %}
+<section class="wrap section">
+  <h2>Fresh from the nursery</h2>
+  <div class="grid">
+    {% for p in featured %}{% include "card.html" %}{% endfor %}
+  </div>
+  <p class="more"><a href="plants.html">See all plants &rarr;</a></p>
+</section>
+{% endif %}
+
+<section class="wrap section visit-strip">
+  <div>
+    <h2>Come visit</h2>
+    <p>{% for line in site.address %}{{ line }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    <p><a href="visit.html">Hours &amp; directions &rarr;</a></p>
+  </div>
+  <div>
+    <h2>Our story</h2>
+    <p>{{ site.about[0] }}</p>
+    <p><a href="about.html">Read more &rarr;</a></p>
+  </div>
+</section>
+{% endblock %}

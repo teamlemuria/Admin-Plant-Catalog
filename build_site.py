@@ -30,7 +30,7 @@ from PIL import Image, ImageOps
 
 BASE = Path(__file__).resolve().parent
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
-FULL_SIZE, THUMB_SIZE = 1200, 480            # longest side in pixels
+FULL_SIZE, THUMB_SIZE, HERO_SIZE = 1200, 480, 1920   # longest side in pixels
 SIZE_WORDS = {"QT": "Quart", "6PK": "6-pack"}
 STATUS_CLASS = {"In stock": "ok", "Low stock": "low", "Check stock": "check", "": "check"}
 
@@ -124,6 +124,13 @@ def money(v):
         return ""
 
 
+def botanical_sort_key(botanical, common=""):
+    """Alphabetical by botanical name; ignores case, quote marks and stray spaces so
+    Acer palmatum 'Bloodgood' and Acer palmatum \u2018Bloodgood\u2019 sort the same way."""
+    b = re.sub(r"[\u2018\u2019\u201c\u201d'\"]", "", text(botanical))
+    return (re.sub(r"\s+", " ", b).strip().casefold(), text(common).casefold())
+
+
 def size_key(r):
     v = r.get("SIZE")
     return (0, float(v), "") if isinstance(v, (int, float)) else (1, 0, text(v).lower())
@@ -193,6 +200,34 @@ def publish_photo(rel, photo_dir, out_photos, cache, force):
     return cache[rel]
 
 
+def build_hero(cfg, photo_dir, out_dir, force):
+    """Resize the homepage hero image to static/hero.jpg. Returns its site-relative URL, or None
+    if no hero_image is set or the file is missing (the hero then shows a plain grey-green panel)."""
+    rel = text(cfg.get("hero_image"))
+    if not rel:
+        return None
+    src = (photo_dir / parse_images(rel)[0]).resolve() if parse_images(rel) else None
+    if not src or photo_dir.resolve() not in src.parents or not src.is_file() or src.suffix.lower() not in IMAGE_EXTS:
+        print(f"  ! hero image not found, using plain overlay: {rel}")
+        return None
+    dest = out_dir / "static" / "hero.jpg"
+    try:
+        if force or not dest.is_file() or int(dest.stat().st_mtime) != int(src.stat().st_mtime):
+            with Image.open(src) as im:
+                im = ImageOps.exif_transpose(im).convert("RGB")
+                im.thumbnail((HERO_SIZE, HERO_SIZE))
+                tmp = dest.with_name(dest.name + ".img")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                im.save(tmp, format="JPEG", quality=80, optimize=True)
+            write_file(dest, tmp.read_bytes())
+            tmp.unlink()
+            os.utime(dest, (int(src.stat().st_mtime),) * 2)
+    except Exception as e:
+        print(f"  ! could not process hero image: {e}")
+        return None
+    return "static/hero.jpg"
+
+
 # ---------------------------------------------------------------- data
 def load_rows(xlsx):
     wb = load_workbook(xlsx, read_only=True, data_only=True)   # read-only: never modifies the file
@@ -253,7 +288,7 @@ def build_plants(rows, cfg, photo_dir, out_dir, force):
             "from_price": money(min(prices)) if prices else "",
             "status": labels[best], "cls": STATUS_CLASS.get(best, "check"),
         })
-    plants.sort(key=lambda p: (p["botanical"].casefold(), p["common"].casefold()))
+    plants.sort(key=lambda p: botanical_sort_key(p["botanical"], p["common"]))
     return plants
 
 
@@ -274,6 +309,7 @@ def main():
     out_dir.mkdir(exist_ok=True)
 
     plants = build_plants(rows, cfg, photo_dir, out_dir, args.force)
+    hero_url = build_hero(cfg, photo_dir, out_dir, args.force)
 
     today = date.today()
     cfg["updated"] = f"{today:%B} {today.day}, {today.year}"
@@ -305,8 +341,10 @@ def main():
         if f.is_file():
             out(Path("static") / f.relative_to(BASE / "site_static"), f.read_bytes())
 
+    if hero_url:
+        written.add((out_dir / hero_url).resolve())     # keep it safe from the static/ tidy-up below
     render("home.html", "index.html", "", nav="home", featured=featured, categories=categories,
-           plant_count=len(plants))
+           plant_count=len(plants), hero_url=hero_url)
     render("catalog.html", "plants.html", "", nav="plants", categories=categories)
     render("about.html", "about.html", "", nav="about")
     render("visit.html", "visit.html", "", nav="visit")

@@ -41,15 +41,23 @@ img { max-width:100%; display:block; }
 .button:hover { filter:brightness(.95); }
 
 /* home */
-.hero { position:relative; isolation:isolate; background: url('photos/nursery-landing.jpg') center/cover no-repeat; color:#fff; padding:64px 0; }
-.hero::before { content:""; position:absolute; inset:0; z-index:-1; background:rgba(50,75,57,.72); }
-.hero .wrap { position:relative; }
-.hero h1 { font-size:2.8rem; }
+.hero { background:#5d7266 center/cover no-repeat; color:#fff; }
+.hero-overlay { background:rgba(74,94,82,.74); padding:72px 0; }   /* grey-green, semi-transparent */
+.hero.has-image { min-height:380px; display:flex; }
+.hero.has-image .hero-overlay { flex:1; display:flex; align-items:center; }
+.hero.has-image .hero-overlay .wrap { width:100%; }
+.hero h1 { font-size:2.8rem; text-shadow:0 1px 3px rgba(0,0,0,.25); }
 .hero .lead { font-size:1.3rem; margin:0 0 12px; opacity:.95; }
 .hero p { max-width:620px; }
-.hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; }
-.hero .button { border-color:#fff; }
-.hero .button.primary { background:#fff; color:var(--green-900); }
+.hero-search { display:flex; gap:8px; max-width:640px; margin:24px 0 0; }
+.hero-search input[type=search] { flex:1; min-width:0; min-height:54px; padding:12px 16px; font:inherit; font-size:1.1rem;
+  color:var(--ink); background:#fff; border:2px solid #fff; border-radius:8px; }
+.hero-search input[type=search]:focus { outline:3px solid rgba(255,255,255,.55); outline-offset:2px; }
+.hero-search .button { min-height:54px; padding:0 26px; font-size:1.05rem; background:var(--green-900); border-color:var(--green-900); color:#fff; }
+.hero-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+.hero .button { border-color:#fff; background:transparent; color:#fff; }
+.hero .button:hover { background:rgba(255,255,255,.15); filter:none; }
+.hero .hero-search .button:hover { background:var(--green-700); }
 .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
 .tile { display:flex; flex-direction:column; padding:20px; background:var(--white); border:1px solid var(--line);
   border-radius:var(--radius); text-decoration:none; color:var(--ink); box-shadow:var(--shadow); }
@@ -108,4 +116,6 @@ th { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(
 @media (max-width:760px) {
   .plant { grid-template-columns:1fr; }
   .hero h1 { font-size:2.1rem; }
+  .hero-search { flex-direction:column; }
+  .hero-overlay { padding:48px 0; }
 }

@@ -32,6 +32,7 @@
   "source_xlsx": "plant-index.xlsx",
   "photo_dir": "photos",
   "output_dir": "public-site",
+  "hero_image": "nursery-landing.jpg",
   "featured_count": 8,
   "status_labels": {
     "In stock": "In stock",
