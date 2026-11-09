@@ -70,7 +70,7 @@
   var p = new URLSearchParams(location.search);
   q.value = p.get("q") || "";
   category.value = p.get("category") || "";
-  subtype.value = p.get("subtype") || "";
+  var requestedSubtype = p.get("subtype") || "";
   sun.value = p.get("sun") || "";
   trait.value = p.get("trait") || "";
   instock.checked = p.get("instock") === "1";
@@ -78,11 +78,12 @@
   function refreshSubtypes() {
     var vals = Array.from(new Set(all.filter(function (plant) { return !category.value || plant.c === category.value; }).map(function (plant) { return plant.sub; }).filter(Boolean))).sort(function(a,b){return a.localeCompare(b);});
     var current = subtype.value;
-    subtype.innerHTML = '<option value="">All subtypes</option>' + vals.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join("");
+    subtype.innerHTML = '<option value="">All plant types</option>' + vals.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join("");
     if (vals.indexOf(current) >= 0) subtype.value = current; else subtype.value = "";
   }
   category.addEventListener("change", function(){ refreshSubtypes(); apply(); });
   refreshSubtypes();
+  if (Array.from(subtype.options).some(function(o){return o.value === requestedSubtype;})) subtype.value = requestedSubtype;
   [q, subtype, sun, trait, instock].forEach(function (el) {
     el.addEventListener(el === q ? "input" : "change", apply);
   });

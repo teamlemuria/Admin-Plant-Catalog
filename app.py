@@ -24,7 +24,7 @@ PHOTO_DIR = BASE / "photos"
 IMAGE_FIELD = "IMAGE"            # column heading in the workbook
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 # Internal columns shown only in the "Staff details" panel of a landing page.
-STAFF_FIELDS = ["ROW", "#", "LAST CHECK", "TYPE", "SUBTYPE"]
+STAFF_FIELDS = ["ROW", "#", "LAST CHECK", "TYPE", "SUPERTYPE"]
 # Set to False before sharing landing pages with customers: hides the staff panel,
 # the Edit buttons, and photo-path warnings.
 SHOW_STAFF_DETAILS = True
@@ -36,14 +36,14 @@ CHECK_FIELD = "LAST CHECK"
 # Form layout: header name -> section. Headers not listed fall into "Other Fields",
 # so the form keeps working if columns are added or renamed in the workbook.
 FORM_SECTIONS = [
-    ("Plant Identification", ["BOTANICAL NAME", "COMMON NAME", "TYPE", "LIST"]),
+    ("Plant Identification", ["BOTANICAL NAME", "COMMON NAME", "SUPERTYPE", "TYPE"]),
     ("Inventory & Pricing", ["STOCK NOTE", "SIZE", "PRICE", "LAST CHECK", "ROW", "#"]),
     ("Growing Information", ["HxW", "EXPOSURE", "CN / DT", "FOLIAGE TYPE"]),
     ("Photo", [IMAGE_FIELD]),
 ]
 WIDE_FIELDS = {"BOTANICAL NAME", "COMMON NAME"}
 # Fields that suggest existing values from the workbook while still allowing free text.
-SUGGEST_FIELDS = ["TYPE", "LIST", "SIZE", "EXPOSURE", "CN / DT", "FOLIAGE TYPE"]
+SUGGEST_FIELDS = ["SUPERTYPE", "TYPE", "SIZE", "EXPOSURE", "CN / DT", "FOLIAGE TYPE"]
 
 app = Flask(__name__)
 app.secret_key = "local-plant-index"
@@ -86,7 +86,7 @@ def photo_exists(rel):
 
 def headers_and_rows():
     wb, ws = get_workbook()
-    headers = [ws.cell(1, c).value for c in range(1, ws.max_column + 1)]
+    headers = [str(ws.cell(1, c).value).strip() if ws.cell(1, c).value is not None else f"UNNAMED_{c}" for c in range(1, ws.max_column + 1)]
     rows = []
     for excel_row in range(2, ws.max_row + 1):
         values = [ws.cell(excel_row, c).value for c in range(1, ws.max_column + 1)]
@@ -119,7 +119,8 @@ def stock_options():
             if v not in (None, ""):
                 options.append(str(v))
     wb.close()
-    return options
+    valid = ["In stock", "Low stock", "Check stock", "Not available"]
+    return valid
 
 def parse_image_paths(value):
     """Read legacy single paths or semicolon/newline-separated image paths."""
@@ -513,17 +514,17 @@ def update_site():
         return redirect(url_for("index"))
 
     if result.returncode == 0:
-        try:
-            import shutil
-            generated = BASE / "public-site"
-            destination = BASE.parent / "teamlemuria.github.io"
-            if destination.exists():
+        import shutil
+        generated = BASE / "public-site"
+        destination = BASE.parent / "teamlemuria.github.io"
+        if destination.is_dir():
+            try:
                 shutil.copytree(generated, destination, dirs_exist_ok=True)
-            else:
-                shutil.copytree(generated, destination)
-            flash("Website updated. Generated files were saved to public-site and copied to the sibling teamlemuria.github.io folder.")
-        except Exception as exc:
-            flash(f"Site builder completed, but copying to teamlemuria.github.io failed: {exc}")
+                flash("Website updated in public-site and copied to teamlemuria.github.io.")
+            except Exception as exc:
+                flash(f"Website built successfully in public-site; optional site-folder copy failed: {exc}")
+        else:
+            flash("Website updated successfully in public-site. No sibling publishing folder was found; local files are ready.")
     else:
         details = (result.stderr or result.stdout or "No error details were returned.").strip().splitlines()
         summary = "\n".join(details[-4:])

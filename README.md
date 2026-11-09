@@ -107,3 +107,14 @@ Here is a list of statuses. These are meant to be enforced rigidly:
 -Low stock
 -Check stock
 -Not available
+## Repairs in this version (November 2026)
+
+- Public browsing uses **SUPERTYPE** for the main category and **TYPE** for its dependent plant-type filter. **LIST** is ignored for public taxonomy. The existing LIST column remains in Excel for backwards compatibility.
+- Featured plants on the homepage are generated from the current workbook and available photographs. 129 previously generated photographs were recovered into the editable `photos/` library because that source folder was empty in the supplied ZIP.
+- All recognized SUPERTYPE values are included, even when they are not in the suggested category order; this avoids silently dropping custom classifications.
+- Admin form suggestions and grouping now use SUPERTYPE and TYPE; the four stock statuses remain fixed.
+- Update site saves into `public-site/` and copies to a sibling `teamlemuria.github.io` folder only if that folder already exists. No internet publishing occurs.
+- The plant-index workbook was not rewritten or normalized. Back it up before making changes. Keep its first-row column headings intact, particularly BOTANICAL NAME, COMMON NAME, STOCK NOTE, TYPE, SUPERTYPE, and IMAGE.
+
+### Verification
+The site builder was run successfully against the included workbook: 1,412 inventory rows produced 821 public plant pages and eight featured cards. Python syntax checks passed. The local Flask admin server could not be executed in the build environment because Flask was not installed there and package downloads were unavailable; the provided Windows launcher installs requirements when internet access is available. Admin browser behavior should therefore be verified on your computer before relying on it for live edits.

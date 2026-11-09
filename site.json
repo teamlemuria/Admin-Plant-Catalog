@@ -40,11 +40,11 @@
     "Check stock": "Call to confirm"
   },
   "blank_status_label": null,
-  "category_labels": {
-    "FIELD": "Garden Plants",
-    "TREE": "Trees",
-    "ROSE": "Roses",
-    "EDIBLE": "Edibles"
-  },
-  "category_other": "Other"
+  "category_other": "Other",
+  "supertype_order": [
+    "Perennial",
+    "Tree",
+    "Rose",
+    "Edible Fruit/Nut"
+  ]
 }

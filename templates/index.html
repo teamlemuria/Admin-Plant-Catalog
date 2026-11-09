@@ -69,8 +69,28 @@
                   {% endfor %}
                 </select>
               </td>
-            {% elif h in ["#", "ROW"] %}
-              <td><input class="inline-field" data-field="{{ h }}" value="{{ v if v is not none else '' }}" aria-label="Edit {{ h }}" /></td>
+            {% elif h in ["#"] %}
+              <td class="short-field-cell">
+              <input
+                class="inline-field short-field"
+                type="text"
+                size="3"
+                data-field="{{ h }}"
+                value="{{ v if v is not none else '' }}"
+                aria-label="Edit {{ h }}"
+              />
+              </td>
+            {% elif h in ["ROW"] %}
+              <td class="short-field-cell">
+              <input
+                class="inline-field short-field"
+                type="text"
+                size="9"
+                data-field="{{ h }}"
+                value="{{ v if v is not none else '' }}"
+                aria-label="Edit {{ h }}"
+              />
+              </td>
             {% elif h == "PRICE" %}
               <td class="num">{% if v is not none %}{{ v|money }}{% endif %}</td>
             {% elif h == "BOTANICAL NAME" %}

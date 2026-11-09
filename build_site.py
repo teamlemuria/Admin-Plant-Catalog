@@ -271,15 +271,15 @@ def build_plants(rows, cfg, photo_dir, out_dir, force):
                   "cls": STATUS_CLASS.get(text(r.get("STOCK NOTE")), "check")} for r in grp]
         prices = [float(r["PRICE"]) for r in grp if isinstance(r.get("PRICE"), (int, float))]
         best = min((text(r.get("STOCK NOTE")) for r in grp), key=status_order.index)
-        category = text(first("TYPE")) or cfg["category_other"]
-        subtype = text(first("SUBTYPE"))
+        category = text(first("SUPERTYPE")) or cfg["category_other"]
+        subtype = text(first("TYPE"))
 
         plants.append({
             "slug": slug,
             "common": nicecase(first("COMMON NAME")) or text(first("BOTANICAL NAME")),
             "botanical": text(first("BOTANICAL NAME")),
             "botanical_html": botanical_html(first("BOTANICAL NAME")),
-            "category": category, "type": text(first("TYPE")), "subtype": subtype,
+            "category": category, "type": subtype, "subtype": subtype,
             "last_updated": date_value(first("LAST CHECK")),
             "sun": nicecase(first("EXPOSURE")), "sun_flags": sun_flags(first("EXPOSURE")),
             "hxw": text(first("HxW")),
@@ -319,8 +319,9 @@ def main():
     counts = {}
     for p in plants:
         counts[p["category"]] = counts.get(p["category"], 0) + 1
-    order = list(cfg["category_labels"].values()) + [cfg["category_other"]]
+    order = list(cfg.get("supertype_order", []))
     categories = [(c, counts[c]) for c in order if c in counts]
+    categories += sorted([(c, n) for c, n in counts.items() if c not in order], key=lambda x: x[0].casefold())
 
     featured = [p for p in plants if p["photos"]]
     featured.sort(key=lambda p: p["cls"] != "ok")          # in-stock first (stable sort)
@@ -365,7 +366,6 @@ def main():
         for ph in p["photos"]:
             written.update(((out_dir / ph["full"]).resolve(), (out_dir / ph["thumb"]).resolve()))
     prune(out_dir / "plant", written, "*.html")
-    prune(out_dir / "photos", written)
     prune(out_dir / "static", written)
 
     with_photo = sum(1 for p in plants if p["photos"])
